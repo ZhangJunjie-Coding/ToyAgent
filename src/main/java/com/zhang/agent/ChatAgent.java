@@ -2,8 +2,11 @@ package com.zhang.agent;
 
 import com.zhang.llm.ChatModel;
 import com.zhang.llm.Message;
+import com.zhang.llm.Models;
+import com.zhang.llm.OpenAiChatModel;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @Author: ZhangJunjie
@@ -31,7 +34,8 @@ public interface ChatAgent extends Agent {
 
     }
 
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws InterruptedException {
+        OpenAiChatModel model = Models.openAiOrNull();
+        System.out.println(new Impl(model).chat("用一句话介绍你自己"));
     }
 }

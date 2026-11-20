@@ -39,21 +39,34 @@ public final class OpenAiChatModel implements ChatModel {
                 .map(m -> Map.of("role", m.role(), "content", m.content()))
                 .toList());
 
+//        body.put("thinking",Map.of("type","enabled"));
+//        body.put("reasoning_effort","high");
+//        body.put("stream",false);
+
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/chat/completions"))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + apiKey)
                 .timeout(Duration.ofSeconds(120))
-                .POST(HttpRequest.BodyPublishers.ofString(Json.write(null)))
+                .POST(HttpRequest.BodyPublishers.ofString(Json.write(body)))
                 .build();
 
         body.put("temperature", 0.7);
 
         try {
-            http.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                throw new IllegalStateException("模型调用失败 HTTP " + response.statusCode() + ": " + response.body());
+            }
+
+            Object root = Json.parse(response.body());
+            Object choices = ((Map<?, ?>) root).get("choices");
+            Object first = ((List<?>) choices).get(0);
+            Object message = ((Map<?, ?>) first).get("message");
+
+            return String.valueOf(((Map<?, ?>) message).get("content"));
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return "";
     }
 }
